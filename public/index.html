@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P NetShare - Sharing is Caring</title>
+    <style>
+        /* Light & Dark Themes */
+        :root[data-theme="dark"] {
+            --primary: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: #0f172a;
+            --border: #475569;
+            --success: #22c55e;
+        }
+        :root[data-theme="light"] {
+            --primary: #4f46e5;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --input-bg: #f8fafc;
+            --border: #cbd5e1;
+            --success: #16a34a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; transition: 0.3s; }
+        .container { max-width: 480px; width: 100%; margin: 2rem auto; padding: 1.5rem; background: var(--card-bg); border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        
+        h1 { text-align: center; margin-bottom: 0.3rem; font-size: 1.5rem; color: var(--primary); }
+        p.subtitle { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.2rem; }
+
+        /* Navigation Tabs */
+        .nav-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.2rem; }
+        .tab-btn { flex: 1; padding: 0.6rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; background: var(--border); color: var(--text); font-size: 0.9rem; }
+        .tab-btn.active { background: var(--primary); color: #fff; }
+
+        .form-group { margin-bottom: 0.9rem; }
+        label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+        input, select { width: 100%; padding: 0.7rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-size: 0.95rem; }
+        
+        button.action-btn { width: 100%; padding: 0.8rem; background: var(--success); color: white; border: none; border-radius: 0.5rem; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 0.8rem; }
+        button.action-btn:hover { opacity: 0.9; }
+        .hidden { display: none !important; }
+
+        /* Settings Card Options */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        
+        #ad-banner { background: var(--input-bg); border: 1px dashed var(--border); padding: 0.6rem; text-align: center; border-radius: 0.5rem; margin-top: 1.2rem; font-size: 0.8rem; color: var(--text-muted); }
+        .status-box { margin-top: 1rem; padding: 0.8rem; background: var(--input-bg); border-radius: 0.5rem; text-align: center; font-family: monospace; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>P2P NetShare</h1>
+        <p class="subtitle">"Sharing is Caring" — Cross-Device Global Hotspot</p>
+
+        <!-- Main Tab Navigation -->
+        <div class="nav-tabs">
+            <button id="btn-host-tab" class="tab-btn active" onclick="switchTab('host')">Share (Host)</button>
+            <button id="btn-recv-tab" class="tab-btn" onclick="switchTab('recv')">Get Net</button>
+            <button id="btn-settings-tab" class="tab-btn" onclick="switchTab('settings')">Settings ⚙️</button>
+        </div>
+
+        <!-- HOST PANEL -->
+        <div id="host-panel">
+            <div class="form-group">
+                <label>Select Your Country</label>
+                <select id="host-country">
+                    <option value="South Africa">🇿🇦 South Africa</option>
+                    <option value="Nigeria">🇳🇬 Nigeria</option>
+                    <option value="Kenya">🇰🇪 Kenya</option>
+                    <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                    <option value="United States">🇺🇸 United States</option>
+                    <option value="Other">🌍 Other Global Region</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Subscription Tier</label>
+                <select id="host-tier" onchange="checkTierSelection()">
+                    <option value="Basic">Basic (Free - 1 Hour Cap + Ads)</option>
+                    <option value="Mid">Mid-Tier (R50 / $3 - Extended) 🔒</option>
+                    <option value="Premium">Premium (R100 / $6 - Unlimited + Ad-Free) 🔒</option>
+                </select>
+            </div>
+
+            <!-- Mock Payment Modal -->
+            <div id="payment-modal" class="hidden" style="background:var(--input-bg); padding:1rem; border-radius:0.5rem; border:1px solid var(--primary); margin-bottom:1rem;">
+                <h3 id="modal-title" style="color:var(--primary); font-size:1rem; margin-bottom:0.4rem;">Unlock Tier</h3>
+                <ul id="plan-benefits" style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.8rem; padding-left:1rem; text-align:left;"></ul>
+                
+                <a href="#" onclick="alert('Redirecting to Mock Gateway (PayFast / Yoco / Stripe)...'); return false;" style="display:block; text-align:center; background:var(--success); color:white; padding:0.6rem; border-radius:0.4rem; text-decoration:none; font-weight:bold; font-size:0.85rem; margin-bottom:0.6rem;">Pay Securely Online 💳</a>
+                
+                <div class="form-group">
+                    <label>Enter Unlock PIN / Receipt Code</label>
+                    <input type="text" id="unlock-pin" placeholder="Enter key (e.g. TEST-KEY)">
+                </div>
+                <button type="button" class="action-btn" style="background:var(--primary); margin-top:0.3rem;" onclick="verifyPaymentPin()">Verify PIN</button>
+            </div>
+
+            <div class="form-group">
+                <label>Unique Host Username</label>
+                <input type="text" id="host-username" placeholder="e.g. PromesseHotspot">
+            </div>
+
+            <div class="form-group">
+                <label>Unique Session Password</label>
+                <input type="password" id="host-password" placeholder="Enter secure password">
+            </div>
+
+            <button class="action-btn" onclick="startHosting()">Start Sharing Hotspot</button>
+            <div id="host-status" class="status-box hidden"></div>
+        </div>
+
+        <!-- RECEIVER PANEL -->
+        <div id="recv-panel" class="hidden">
+            <div class="form-group">
+                <label>Your Name</label>
+                <input type="text" id="recv-name" placeholder="Enter your display name">
+            </div>
+            <div class="form-group">
+                <label>Host's Unique Username</label>
+                <input type="text" id="recv-host-username" placeholder="Enter target host username">
+            </div>
+            <div class="form-group">
+                <label>Host Password</label>
+                <input type="password" id="recv-password" placeholder="Enter host session password">
+            </div>
+            <button class="action-btn" style="background: var(--primary);" onclick="joinHotspot()">Connect to Network</button>
+            <div id="recv-status" class="status-box hidden"></div>
+        </div>
+
+        <!-- SETTINGS PANEL -->
+        <div id="settings-panel" class="hidden">
+            <h3 style="font-size: 1rem; color: var(--primary); margin-bottom: 0.8rem;">App Preferences</h3>
+            
+            <div class="setting-row">
+                <span>Dark / Light Theme Mode</span>
+                <button onclick="toggleTheme()" id="theme-toggle-btn" style="padding: 0.4rem 0.8rem; background: var(--primary); color: #fff; border: none; border-radius: 0.3rem; cursor: pointer;">Switch Mode</button>
+            </div>
+
+            <div class="setting-row">
+                <span>Auto-Reconnect P2P Bridge</span>
+                <input type="checkbox" checked style="width: auto;">
+            </div>
+
+            <div class="setting-row">
+                <span>Enable Connection Audio Alerts</span>
+                <input type="checkbox" checked style="width: auto;">
+            </div>
+
+            <div class="setting-row">
+                <span>App Version</span>
+                <span style="color: var(--text-muted);">v1.0.2 (P2P Build)</span>
+            </div>
+        </div>
+
+        <!-- Ad Banner Container -->
+        <div id="ad-banner">
+            📢 **Sponsored Ad**: Get Fast Global Data! [Upgrade to Premium to Remove Ads]
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentTier = 'Basic';
+        let isTierUnlocked = false;
+        let peerConnection;
+        let dataChannel;
+        let targetPeerId = null;
+
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+        function switchTab(tab) {
+            document.getElementById('host-panel').classList.add('hidden');
+            document.getElementById('recv-panel').classList.add('hidden');
+            document.getElementById('settings-panel').classList.add('hidden');
+            
+            document.getElementById('btn-host-tab').classList.remove('active');
+            document.getElementById('btn-recv-tab').classList.remove('active');
+            document.getElementById('btn-settings-tab').classList.remove('active');
+
+            if (tab === 'host') {
+                document.getElementById('host-panel').classList.remove('hidden');
+                document.getElementById('btn-host-tab').classList.add('active');
+            } else if (tab === 'recv') {
+                document.getElementById('recv-panel').classList.remove('hidden');
+                document.getElementById('btn-recv-tab').classList.add('active');
+            } else if (tab === 'settings') {
+                document.getElementById('settings-panel').classList.remove('hidden');
+                document.getElementById('btn-settings-tab').classList.add('active');
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                html.setAttribute('data-theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+            }
+        }
+
+        function checkTierSelection() {
+            const selectedTier = document.getElementById('host-tier').value;
+            const modal = document.getElementById('payment-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const benefitsList = document.getElementById('plan-benefits');
+
+            if (selectedTier === 'Mid' && !isTierUnlocked) {
+                modal.classList.remove('hidden');
+                modalTitle.innerText = "Unlock Mid-Tier (R50 / $3)";
+                benefitsList.innerHTML = `<li>⏳ Extended session time limits</li><li>📶 Priority routing speed</li>`;
+            } else if (selectedTier === 'Premium' && !isTierUnlocked) {
+                modal.classList.remove('hidden');
+                modalTitle.innerText = "Unlock Premium Tier (R100 / $6)";
+                benefitsList.innerHTML = `<li>🚀 100% Unlimited session time</li><li>✨ Completely Ad-Free</li><li>⚡ Maximum stability</li>`;
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function verifyPaymentPin() {
+            const pin = document.getElementById('unlock-pin').value.trim();
+            if (pin === 'TEST-KEY' || pin === 'PREMIUM-100' || pin === 'MID-50') {
+                isTierUnlocked = true;
+                document.getElementById('payment-modal').classList.add('hidden');
+                alert('✅ Payment verified! Tier unlocked successfully.');
+            } else {
+                alert('❌ Invalid PIN. Use "TEST-KEY" for simulation.');
+            }
+        }
+
+        function startHosting() {
+            const selectedTier = document.getElementById('host-tier').value;
+            if ((selectedTier === 'Mid' || selectedTier === 'Premium') && !isTierUnlocked) {
+                alert('Please unlock your chosen tier with a valid PIN first.');
+                return;
+            }
+
+            const username = document.getElementById('host-username').value.trim();
+            const password = document.getElementById('host-password').value;
+            const country = document.getElementById('host-country').value;
+
+            if (!username || !password) {
+                alert('Please enter a unique username and password.');
+                return;
+            }
+
+            currentTier = selectedTier;
+            socket.emit('create-session', { username, password, country, tier: currentTier });
+        }
+
+        socket.on('host-success', ({ username, tier }) => {
+            const statusBox = document.getElementById('host-status');
+            statusBox.classList.remove('hidden');
+            statusBox.innerHTML = `🟢 Hosting Active!<br>Username: <b>${username}</b><br>Tier: ${tier}<br>Status: Waiting for peer...`;
+            updateAdVisibility(tier);
+        });
+
+        function joinHotspot() {
+            const recvName = document.getElementById('recv-name').value.trim();
+            const hostUsername = document.getElementById('recv-host-username').value.trim();
+            const password = document.getElementById('recv-password').value;
+
+            if (!recvName || !hostUsername || !password) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            socket.emit('join-session', { hostUsername, password, receiverName: recvName });
+        }
+
+        socket.on('joined-success', ({ hostUsername, tier }) => {
+            currentTier = tier;
+            const statusBox = document.getElementById('recv-status');
+            statusBox.classList.remove('hidden');
+            statusBox.innerHTML = `✅ Connected to host: ${hostUsername}. Establishing WebRTC bridge...`;
+            updateAdVisibility(tier);
+        });
+
+        socket.on('join-error', ({ message }) => { alert(message); });
+
+        // WebRTC Connection Logic for Peer Handshaking
+        socket.on('peer-joined', async ({ receiverId, receiverName }) => {
+            targetPeerId = receiverId;
+            const statusBox = document.getElementById('host-status');
+            statusBox.innerHTML += `<br>Peer <b>${receiverName}</b> connected! Opening bridge...`;
+
+            peerConnection = new RTCPeerConnection(rtcConfig);
+            dataChannel = peerConnection.createDataChannel("netshare-proxy");
+            setupDataChannelEvents();
+
+            peerConnection.onicecandidate = (e) => {
+                if (e.candidate) socket.emit('ice-candidate', { targetId: targetPeerId, candidate: e.candidate });
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            socket.emit('offer', { targetId: targetPeerId, offer });
+        });
+
+        socket.on('offer', async ({ senderId, offer }) => {
+            targetPeerId = senderId;
+            peerConnection = new RTCPeerConnection(rtcConfig);
+            peerConnection.onicecandidate = (e) => {
+                if (e.candidate) socket.emit('ice-candidate', { targetId: targetPeerId, candidate: e.candidate });
+            };
+            peerConnection.ondatachannel = (e) => {
+                dataChannel = e.channel;
+                setupDataChannelEvents();
+            };
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            socket.emit('answer', { targetId: targetPeerId, answer });
+        });
+
+        socket.on('answer', async ({ answer }) => {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+        });
+
+        socket.on('ice-candidate', async ({ candidate }) => {
+            if (peerConnection) await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        });
+
+        function setupDataChannelEvents() {
+            dataChannel.onopen = () => {
+                const hostStatus = document.getElementById('host-status');
+                const recvStatus = document.getElementById('recv-status');
+                if (hostStatus) hostStatus.innerHTML = `🟢 P2P Internet Bridge Active!`;
+                if (recvStatus) recvStatus.innerHTML = `🟢 P2P Internet Bridge Active! Data flowing.`;
+            };
+        }
+
+        function updateAdVisibility(tier) {
+            const adBanner = document.getElementById('ad-banner');
+            if (tier === 'Premium') adBanner.classList.add('hidden');
+            else adBanner.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
